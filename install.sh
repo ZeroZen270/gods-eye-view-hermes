@@ -4,9 +4,11 @@
 # Idempotent: safe to re-run (updates the checkout, refreshes deps).
 set -eu
 
-DIR="${GEV_DIR:-$HOME/gods-eye-view}"
 REPO="https://github.com/bilawalsidhu/gods-eye-view.git"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Default target: the vendored copy shipped in this repo, if present.
+DIR="${GEV_DIR:-$SCRIPT_DIR/gods-eye-view}"
+[ -d "$DIR" ] || DIR="${GEV_DIR:-$HOME/gods-eye-view}"
 
 # Node gate: need 24.x (>=24.14) or 26.x
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
@@ -15,7 +17,9 @@ if [ "$NODE_MAJOR" != "24" ] && [ "$NODE_MAJOR" != "26" ]; then
   exit 1
 fi
 
-if [ -d "$DIR/.git" ]; then
+if [ "$DIR" = "$SCRIPT_DIR/gods-eye-view" ]; then
+  echo "Using the vendored copy in $DIR"
+elif [ -d "$DIR/.git" ]; then
   echo "Updating existing checkout in $DIR"
   git -C "$DIR" pull --ff-only
 else
